@@ -24,6 +24,8 @@ import {
   AudioLines,
   Bot,
   X,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import logoUrl from "../../WhatsApp Image 2026-09-24 at 2.06.05 PM.jpeg";
 
@@ -187,6 +189,9 @@ const products: Product[] = [
 function Index() {
   const [tabs, setTabs] = useState<AppTab[]>([]);
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
+  const [isTabsExpanded, setIsTabsExpanded] = useState(false);
+  const [loadingTabId, setLoadingTabId] = useState<string | null>(null);
+  const [loadedTabIds, setLoadedTabIds] = useState<string[]>([]);
 
   const openProduct = (product: Product) => {
     const id = product.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
@@ -196,6 +201,8 @@ function Index() {
         : [...currentTabs, { id, name: product.name, desc: product.desc, url: product.url }],
     );
     setActiveTabId(id);
+    setIsTabsExpanded(true);
+    if (product.url && !loadedTabIds.includes(id)) setLoadingTabId(id);
   };
 
   const closeTab = (id: string) => {
@@ -204,12 +211,33 @@ function Index() {
       if (currentId !== id) return currentId;
       return tabs.find((tab) => tab.id !== id)?.id ?? null;
     });
+    setLoadedTabIds((currentIds) => currentIds.filter((tabId) => tabId !== id));
+    setLoadingTabId((currentId) => (currentId === id ? null : currentId));
+    setIsTabsExpanded((currentExpanded) => (tabs.length > 1 ? currentExpanded : false));
   };
 
   return (
     <div className="min-h-screen overflow-x-hidden">
       <Nav />
-      <AppTabs tabs={tabs} activeTabId={activeTabId} onSelect={setActiveTabId} onClose={closeTab} />
+      <AppTabs
+        tabs={tabs}
+        activeTabId={activeTabId}
+        isExpanded={isTabsExpanded}
+        loadingTabId={loadingTabId}
+        onSelect={(id) => {
+          setActiveTabId(id);
+          setIsTabsExpanded(true);
+        }}
+        onClose={closeTab}
+        onMinimize={() => setIsTabsExpanded(false)}
+        onMaximize={() => setIsTabsExpanded(true)}
+        onFrameLoad={(id) => {
+          setLoadedTabIds((currentIds) =>
+            currentIds.includes(id) ? currentIds : [...currentIds, id],
+          );
+          setLoadingTabId((currentId) => (currentId === id ? null : currentId));
+        }}
+      />
       <Hero />
       {/* <EventStrip /> */}
       <ProductGrid onOpen={openProduct} />
@@ -225,7 +253,11 @@ function Nav() {
     <header className="sticky top-0 z-40 backdrop-blur-md bg-background/70 border-b border-border/60">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
         <a href="#" className="flex items-center gap-2 shrink-0" aria-label="Hyperscale home">
-          <img src={logoUrl} alt="Hyperscale Agent" className="h-11 w-auto max-w-[180px] object-contain sm:h-12" />
+          <img
+            src={logoUrl}
+            alt="Hyperscale Agent"
+            className="h-11 w-auto max-w-[180px] object-contain sm:h-12"
+          />
         </a>
         <nav className="flex items-center gap-4 md:gap-8 text-xs sm:text-sm font-medium text-foreground/80 overflow-x-auto whitespace-nowrap">
           <a href="#agents" className="hover:text-foreground">
@@ -252,45 +284,114 @@ function Nav() {
 function AppTabs({
   tabs,
   activeTabId,
+  isExpanded,
+  loadingTabId,
   onSelect,
   onClose,
+  onMinimize,
+  onMaximize,
+  onFrameLoad,
 }: {
   tabs: AppTab[];
   activeTabId: string | null;
+  isExpanded: boolean;
+  loadingTabId: string | null;
   onSelect: (id: string) => void;
   onClose: (id: string) => void;
+  onMinimize: () => void;
+  onMaximize: () => void;
+  onFrameLoad: (id: string) => void;
 }) {
   if (!tabs.length) return null;
 
   const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? tabs[0];
+  const isLoading = activeTab ? loadingTabId === activeTab.id : false;
 
   return (
-    <section className="border-b border-border bg-card/90 shadow-[0_10px_35px_oklch(0.7_0.18_55/0.08)]">
-      <div className="mx-auto max-w-7xl px-3 sm:px-6">
-        <div className="flex min-w-0 items-end gap-1 overflow-x-auto pt-2" role="tablist" aria-label="Open agent pages">
-          {tabs.map((tab) => (
-            <div key={tab.id} className={`group flex min-w-[170px] max-w-[260px] items-center gap-2 rounded-t-xl border border-b-0 px-3 py-2 text-xs sm:text-sm ${tab.id === activeTab?.id ? "border-border bg-background text-foreground" : "border-transparent text-muted-foreground hover:bg-secondary/70"}`}>
-              <button type="button" role="tab" aria-selected={tab.id === activeTab?.id} onClick={() => onSelect(tab.id)} className="min-w-0 flex-1 truncate text-left">
-                {tab.name}
-              </button>
-              <button type="button" onClick={() => onClose(tab.id)} className="grid h-5 w-5 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground" aria-label={`Close ${tab.name}`}>
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          ))}
+    <section
+      className={
+        isExpanded
+          ? "fixed inset-0 z-50 flex min-h-0 flex-col bg-background/95 shadow-2xl backdrop-blur-xl"
+          : "sticky top-16 z-30 border-b border-border bg-card/95 shadow-[0_10px_35px_oklch(0.7_0.18_55/0.08)]"
+      }
+    >
+      <div className={isExpanded ? "flex min-h-0 flex-1 flex-col" : "mx-auto max-w-7xl"}>
+        <div className="flex items-center gap-2 border-b border-border bg-card/95 px-3 sm:px-6">
+          <div
+            className="flex min-w-0 items-end gap-1 overflow-x-auto pt-2"
+            role="tablist"
+            aria-label="Open agent pages"
+          >
+            {tabs.map((tab) => (
+              <div
+                key={tab.id}
+                className={`group flex min-w-[170px] max-w-[260px] items-center gap-2 rounded-t-xl border border-b-0 px-3 py-2 text-xs sm:text-sm ${tab.id === activeTab?.id ? "border-border bg-background text-foreground" : "border-transparent text-muted-foreground hover:bg-secondary/70"}`}
+              >
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={tab.id === activeTab?.id}
+                  onClick={() => onSelect(tab.id)}
+                  className="min-w-0 flex-1 truncate text-left"
+                >
+                  {tab.name}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onClose(tab.id)}
+                  className="grid h-5 w-5 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  aria-label={`Close ${tab.name}`}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={isExpanded ? onMinimize : onMaximize}
+            className="ml-auto grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted-foreground transition hover:bg-secondary hover:text-foreground"
+            title={isExpanded ? "Minimize embedded page" : "Maximize embedded page"}
+            aria-label={isExpanded ? "Minimize embedded page" : "Maximize embedded page"}
+          >
+            {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </button>
         </div>
         {activeTab && (
-          <div className="pb-3 pt-2">
+          <div className={isExpanded ? "min-h-0 flex-1" : "hidden"}>
             {activeTab.url ? (
-              <div className="overflow-hidden rounded-xl border border-border bg-background shadow-inner">
-                <iframe title={activeTab.name} src={activeTab.url} className="h-[min(72vh,720px)] w-full bg-white" />
+              <div className="relative h-full overflow-hidden border-border bg-background shadow-inner">
+                {isLoading && (
+                  <div className="absolute inset-0 z-10 grid place-items-center bg-background">
+                    <div className="flex flex-col items-center gap-5 text-center">
+                      <div className="grid h-28 w-28 place-items-center rounded-full border-2 border-primary/25 border-t-primary p-3 animate-spin">
+                        <img
+                          src={logoUrl}
+                          alt="Loading Hyperscale Agent"
+                          className="h-full w-full rounded-full object-cover"
+                        />
+                      </div>
+                      <p className="text-xs uppercase tracking-[0.28em] text-primary">
+                        Loading agent
+                      </p>
+                    </div>
+                  </div>
+                )}
+                <iframe
+                  title={activeTab.name}
+                  src={activeTab.url}
+                  onLoad={() => onFrameLoad(activeTab.id)}
+                  className="h-full min-h-0 w-full border-0 bg-white"
+                />
               </div>
             ) : (
               <div className="flex min-h-48 items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 px-6 py-12 text-center">
                 <div>
                   <p className="font-hand text-xl text-foreground">{activeTab.name}</p>
                   <p className="mt-2 text-sm text-muted-foreground">{activeTab.desc}</p>
-                  <p className="mt-4 text-xs uppercase tracking-[0.2em] text-primary">URL coming soon</p>
+                  <p className="mt-4 text-xs uppercase tracking-[0.2em] text-primary">
+                    URL coming soon
+                  </p>
                 </div>
               </div>
             )}
@@ -513,7 +614,11 @@ function Footer() {
     <footer className="border-t border-border px-4 sm:px-6 py-8 sm:py-10 text-xs sm:text-sm text-muted-foreground">
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap items-center justify-center gap-2">
-          <img src={logoUrl} alt="Hyperscale Agent" className="h-10 w-auto max-w-[150px] object-contain" />
+          <img
+            src={logoUrl}
+            alt="Hyperscale Agent"
+            className="h-10 w-auto max-w-[150px] object-contain"
+          />
           <span className="ml-2">© 2026 · hyperscaleagent.xyz</span>
         </div>
         <div className="flex gap-6">
