@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import {
   BrainCircuit,
-  Swords,
   Crosshair,
   Rocket,
   Binary,
@@ -23,7 +23,9 @@ import {
   Mic,
   AudioLines,
   Bot,
+  X,
 } from "lucide-react";
+import logoUrl from "../../WhatsApp Image 2026-09-24 at 2.06.05 PM.jpeg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -57,130 +59,160 @@ type Product = {
   url?: string;
 };
 
+type AppTab = {
+  id: string;
+  name: string;
+  desc: string;
+  url?: string;
+};
+
+const dashboardUrl = "https://webapp-lp-dlmm.vercel.app/dashboard";
+
 const products: Product[] = [
   {
     name: "AI Auto LP DLMM",
     icon: BrainCircuit,
     status: "live",
-    tint: "from-green-400 to-emerald-500",
+    tint: "from-orange-400 to-amber-500",
     desc: "Autonomous LP DLMM on Solana",
-    url: "https://app.hyperscaleagent.xyz",
+    url: dashboardUrl,
   },
   {
-    name: "ChessFi",
-    icon: Swords,
+    name: "Memecoin Signal + Trade",
+    icon: Crosshair,
     status: "live",
-    tint: "from-lime-400 to-green-500",
-    desc: "P2P & bot chess wagers on Base",
-    url: "https://game.hyperscaleagent.xyz",
+    tint: "from-amber-400 to-orange-500",
+    desc: "Signals and trading tools for memecoins",
   },
   {
     name: "Sniper Agent",
     icon: Crosshair,
     status: "soon",
-    tint: "from-emerald-400 to-teal-500",
+    tint: "from-orange-400 to-red-500",
     desc: "New launch sniping",
   },
   {
     name: "Yield Optimizer",
     icon: Rocket,
     status: "soon",
-    tint: "from-green-400 to-teal-400",
+    tint: "from-amber-400 to-orange-400",
     desc: "Auto-compound LPs",
   },
   {
     name: "Arbitrage Bot",
     icon: Binary,
     status: "soon",
-    tint: "from-teal-400 to-cyan-500",
+    tint: "from-orange-400 to-red-400",
     desc: "Cross-DEX arbitrage",
   },
   {
     name: "Portfolio AI",
     icon: Fingerprint,
     status: "soon",
-    tint: "from-emerald-400 to-green-600",
+    tint: "from-orange-400 to-amber-600",
     desc: "Self-managed wallets",
   },
   {
     name: "MEV Guard",
     icon: Skull,
     status: "soon",
-    tint: "from-lime-400 to-emerald-500",
+    tint: "from-amber-400 to-orange-500",
     desc: "Anti-MEV protection",
   },
   {
     name: "Signal Scanner",
     icon: Eye,
     status: "soon",
-    tint: "from-cyan-400 to-emerald-400",
+    tint: "from-orange-300 to-amber-400",
     desc: "On-chain alpha radar",
   },
   {
     name: "Liquidity Hunter",
     icon: Bitcoin,
     status: "soon",
-    tint: "from-green-400 to-lime-500",
+    tint: "from-orange-400 to-amber-500",
     desc: "Deep-pool discovery",
   },
   {
     name: "Copy Trade AI",
     icon: Ghost,
     status: "soon",
-    tint: "from-emerald-400 to-cyan-500",
+    tint: "from-orange-400 to-red-400",
     desc: "Mirror smart wallets",
   },
   {
     name: "Sentiment Engine",
     icon: Brain,
     status: "soon",
-    tint: "from-teal-400 to-green-500",
+    tint: "from-amber-400 to-orange-500",
     desc: "Social alpha NLP",
   },
   {
     name: "Risk Manager",
     icon: Lock,
     status: "soon",
-    tint: "from-green-500 to-emerald-600",
+    tint: "from-orange-500 to-red-500",
     desc: "Auto stop-loss agent",
   },
   {
     name: "NFT Sweeper",
     icon: ScanFace,
     status: "soon",
-    tint: "from-lime-400 to-teal-500",
+    tint: "from-amber-400 to-orange-500",
     desc: "Floor-sweep agent",
   },
   {
     name: "Airdrop Hunter",
     icon: Zap,
     status: "soon",
-    tint: "from-green-400 to-emerald-400",
+    tint: "from-orange-400 to-amber-400",
     desc: "Farm qualifying actions",
   },
   {
     name: "DAO Voter",
     icon: Vote,
     status: "soon",
-    tint: "from-emerald-400 to-teal-400",
+    tint: "from-orange-400 to-red-400",
     desc: "Auto-governance",
   },
   {
     name: "Strategy Studio",
     icon: Terminal,
     status: "soon",
-    tint: "from-cyan-400 to-green-500",
+    tint: "from-orange-400 to-amber-500",
     desc: "Build your own agent",
   },
 ];
 
 function Index() {
+  const [tabs, setTabs] = useState<AppTab[]>([]);
+  const [activeTabId, setActiveTabId] = useState<string | null>(null);
+
+  const openProduct = (product: Product) => {
+    const id = product.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    setTabs((currentTabs) =>
+      currentTabs.some((tab) => tab.id === id)
+        ? currentTabs
+        : [...currentTabs, { id, name: product.name, desc: product.desc, url: product.url }],
+    );
+    setActiveTabId(id);
+  };
+
+  const closeTab = (id: string) => {
+    setTabs((currentTabs) => currentTabs.filter((tab) => tab.id !== id));
+    setActiveTabId((currentId) => {
+      if (currentId !== id) return currentId;
+      return tabs.find((tab) => tab.id !== id)?.id ?? null;
+    });
+  };
+
   return (
     <div className="min-h-screen overflow-x-hidden">
       <Nav />
+      <AppTabs tabs={tabs} activeTabId={activeTabId} onSelect={setActiveTabId} onClose={closeTab} />
       <Hero />
       {/* <EventStrip /> */}
-      <ProductGrid />
+      <ProductGrid onOpen={openProduct} />
       <Stats />
       <CTA />
       <Footer />
@@ -192,13 +224,8 @@ function Nav() {
   return (
     <header className="sticky top-0 z-40 backdrop-blur-md bg-background/70 border-b border-border/60">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
-        <a href="#" className="flex items-center gap-2 shrink-0">
-          <div className="w-8 h-8 rounded-lg bg-linear-to-br from-primary to-emerald-400 grid place-items-center text-primary-foreground font-bold shadow-[0_0_18px_oklch(0.8_0.22_145/0.5)]">
-            H
-          </div>
-          <span className="font-hand text-xl sm:text-2xl text-ink leading-none mt-1">
-            hyperscale
-          </span>
+        <a href="#" className="flex items-center gap-2 shrink-0" aria-label="Hyperscale home">
+          <img src={logoUrl} alt="Hyperscale Agent" className="h-11 w-auto max-w-[180px] object-contain sm:h-12" />
         </a>
         <nav className="flex items-center gap-4 md:gap-8 text-xs sm:text-sm font-medium text-foreground/80 overflow-x-auto whitespace-nowrap">
           <a href="#agents" className="hover:text-foreground">
@@ -222,6 +249,58 @@ function Nav() {
   );
 }
 
+function AppTabs({
+  tabs,
+  activeTabId,
+  onSelect,
+  onClose,
+}: {
+  tabs: AppTab[];
+  activeTabId: string | null;
+  onSelect: (id: string) => void;
+  onClose: (id: string) => void;
+}) {
+  if (!tabs.length) return null;
+
+  const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? tabs[0];
+
+  return (
+    <section className="border-b border-border bg-card/90 shadow-[0_10px_35px_oklch(0.7_0.18_55/0.08)]">
+      <div className="mx-auto max-w-7xl px-3 sm:px-6">
+        <div className="flex min-w-0 items-end gap-1 overflow-x-auto pt-2" role="tablist" aria-label="Open agent pages">
+          {tabs.map((tab) => (
+            <div key={tab.id} className={`group flex min-w-[170px] max-w-[260px] items-center gap-2 rounded-t-xl border border-b-0 px-3 py-2 text-xs sm:text-sm ${tab.id === activeTab?.id ? "border-border bg-background text-foreground" : "border-transparent text-muted-foreground hover:bg-secondary/70"}`}>
+              <button type="button" role="tab" aria-selected={tab.id === activeTab?.id} onClick={() => onSelect(tab.id)} className="min-w-0 flex-1 truncate text-left">
+                {tab.name}
+              </button>
+              <button type="button" onClick={() => onClose(tab.id)} className="grid h-5 w-5 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground" aria-label={`Close ${tab.name}`}>
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+        {activeTab && (
+          <div className="pb-3 pt-2">
+            {activeTab.url ? (
+              <div className="overflow-hidden rounded-xl border border-border bg-background shadow-inner">
+                <iframe title={activeTab.name} src={activeTab.url} className="h-[min(72vh,720px)] w-full bg-white" />
+              </div>
+            ) : (
+              <div className="flex min-h-48 items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 px-6 py-12 text-center">
+                <div>
+                  <p className="font-hand text-xl text-foreground">{activeTab.name}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{activeTab.desc}</p>
+                  <p className="mt-4 text-xs uppercase tracking-[0.2em] text-primary">URL coming soon</p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 function Hero() {
   return (
     <section className="relative pt-14 sm:pt-20 pb-10 px-4 sm:px-6">
@@ -238,7 +317,7 @@ function Hero() {
 
         {/* Genspark-style central prompt box */}
         <div className="mt-8 sm:mt-10 max-w-2xl mx-auto">
-          <div className="rounded-3xl border border-border bg-card/80 backdrop-blur-md shadow-[0_0_40px_oklch(0.8_0.22_145/0.12)] p-3 sm:p-4 text-left">
+          <div className="rounded-3xl border border-border bg-card/80 p-3 text-left shadow-[0_0_40px_oklch(0.8_0.22_55/0.12)] backdrop-blur-md sm:p-4">
             <input
               type="text"
               placeholder="Ask anything, deploy any agent"
@@ -272,7 +351,7 @@ function Hero() {
                 </button>
                 <button
                   type="button"
-                  className="flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-semibold hover:bg-primary/90 transition shadow-[0_0_20px_oklch(0.8_0.22_145/0.35)]"
+                  className="flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground shadow-[0_0_20px_oklch(0.8_0.22_55/0.35)] transition hover:bg-primary/90 sm:px-4 sm:text-sm"
                 >
                   <AudioLines className="w-4 h-4" /> Speak
                 </button>
@@ -289,7 +368,7 @@ function EventStrip() {
   return (
     <section className="px-4 sm:px-6 pb-10">
       <div className="max-w-2xl mx-auto rounded-2xl sm:rounded-full border border-border bg-card shadow-sm px-4 sm:px-5 py-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm">
-        <span className="inline-flex w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+        <span className="inline-flex w-2 h-2 rounded-full bg-orange-500 animate-pulse shrink-0" />
         <span className="font-semibold text-foreground">Hyperscale Mainnet</span>
         <span className="text-muted-foreground">— Live across Solana & Base</span>
         <a href="#" className="ml-auto text-primary font-semibold hover:underline shrink-0">
@@ -300,7 +379,7 @@ function EventStrip() {
   );
 }
 
-function ProductGrid() {
+function ProductGrid({ onOpen }: { onOpen: (product: Product) => void }) {
   return (
     <section
       id="agents"
@@ -318,7 +397,7 @@ function ProductGrid() {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-5">
           {products.map((p) => (
-            <ProductCard key={p.name} p={p} />
+            <ProductCard key={p.name} p={p} onOpen={onOpen} />
           ))}
         </div>
       </div>
@@ -326,49 +405,49 @@ function ProductGrid() {
   );
 }
 
-function ProductCard({ p }: { p: Product }) {
+function ProductCard({ p, onOpen }: { p: Product; onOpen: (product: Product) => void }) {
   const Icon = p.icon;
   const isSoon = p.status === "soon";
-  const Wrapper = p.url ? "a" : "div";
-  const wrapperProps = p.url ? { href: p.url, target: "_blank", rel: "noopener noreferrer" } : {};
 
   return (
-    <Wrapper
-      {...wrapperProps}
-      className={`group relative bg-card rounded-2xl border border-border p-4 sm:p-5 flex flex-col items-center text-center transition-all ${
+    <button
+      type="button"
+      onClick={() => onOpen(p)}
+      disabled={isSoon}
+      aria-label={isSoon ? `${p.name}, coming soon` : `Open ${p.name}`}
+      className={`group relative flex flex-col items-center rounded-2xl border border-border bg-card p-4 text-center transition-all sm:p-5 ${
         isSoon
-          ? "opacity-50 saturate-50 pointer-events-none select-none"
-          : "hover:border-primary/50 hover:shadow-[0_0_30px_oklch(0.8_0.22_145/0.2)] hover:-translate-y-1 cursor-pointer"
+          ? "cursor-not-allowed opacity-45 saturate-50"
+          : "cursor-pointer hover:-translate-y-1 hover:border-primary/50 hover:shadow-[0_0_30px_oklch(0.8_0.22_55/0.2)]"
       }`}
-      aria-disabled={isSoon || undefined}
     >
       <span
         className={`absolute top-3 right-3 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
           p.status === "live"
-            ? "bg-emerald-500/15 text-emerald-400"
+            ? "bg-orange-500/15 text-orange-400"
             : "bg-muted text-muted-foreground/70"
         }`}
       >
         {p.status === "live" ? "● Live" : "Soon"}
       </span>
       <div
-        className={`w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-linear-to-br ${p.tint} grid place-items-center mb-3 sm:mb-4 shadow-md ${
-          isSoon ? "blur-[5px] opacity-60" : ""
+        className={`mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-linear-to-br shadow-md sm:mb-4 sm:h-16 sm:w-16 ${p.tint} ${
+          isSoon ? "blur-[5px]" : ""
         }`}
       >
         <Icon className="w-6 h-6 sm:w-8 sm:h-8 text-black" strokeWidth={2.2} />
       </div>
       <h3
-        className={`font-semibold text-xs sm:text-sm ${isSoon ? "text-foreground/40 blur-[3px]" : "text-foreground"}`}
+        className={`text-xs font-semibold sm:text-sm ${isSoon ? "text-foreground/40 blur-[3px]" : "text-foreground"}`}
       >
         {p.name}
       </h3>
       <p
-        className={`text-[11px] sm:text-xs mt-1 ${isSoon ? "text-muted-foreground/40 blur-[3px]" : "text-muted-foreground"}`}
+        className={`mt-1 text-[11px] sm:text-xs ${isSoon ? "text-muted-foreground/40 blur-[3px]" : "text-muted-foreground"}`}
       >
         {p.desc}
       </p>
-    </Wrapper>
+    </button>
   );
 }
 
@@ -401,8 +480,8 @@ function Stats() {
 function CTA() {
   return (
     <section className="px-4 sm:px-6 pb-16 sm:pb-24">
-      <div className="max-w-4xl mx-auto rounded-3xl bg-linear-to-br from-green-600 via-emerald-800 to-black text-white p-8 sm:p-12 md:p-16 text-center relative overflow-hidden border border-primary/30">
-        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_20%_30%,white,transparent_40%),radial-gradient(circle_at_80%_70%,#4ade80,transparent_40%)]" />
+      <div className="relative mx-auto max-w-4xl overflow-hidden rounded-3xl border border-primary/30 bg-linear-to-br from-orange-600 via-red-900 to-black p-8 text-center text-white sm:p-12 md:p-16">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,white,transparent_40%),radial-gradient(circle_at_80%_70%,#fb923c,transparent_40%)] opacity-20" />
         <h2 className="relative font-hand text-3xl sm:text-5xl md:text-6xl">
           Ready to <span className="hl-yellow">hyperscale?</span>
         </h2>
@@ -434,10 +513,7 @@ function Footer() {
     <footer className="border-t border-border px-4 sm:px-6 py-8 sm:py-10 text-xs sm:text-sm text-muted-foreground">
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap items-center justify-center gap-2">
-          <div className="w-7 h-7 rounded-md bg-linear-to-br from-primary to-emerald-400 grid place-items-center text-primary-foreground font-bold text-xs">
-            H
-          </div>
-          <span className="font-hand text-xl text-ink leading-none mt-1">hyperscale</span>
+          <img src={logoUrl} alt="Hyperscale Agent" className="h-10 w-auto max-w-[150px] object-contain" />
           <span className="ml-2">© 2026 · hyperscaleagent.xyz</span>
         </div>
         <div className="flex gap-6">
