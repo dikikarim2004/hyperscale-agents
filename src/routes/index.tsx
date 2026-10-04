@@ -68,7 +68,7 @@ type AppTab = {
   url?: string;
 };
 
-const dashboardUrl = "https://webapp-lp-dlmm.vercel.app/dashboard";
+const dashboardUrl = "https://applp.hyperscaleai.xyz/dashboard";
 
 const products: Product[] = [
   {
