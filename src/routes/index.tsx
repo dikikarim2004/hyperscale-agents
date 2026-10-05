@@ -85,6 +85,7 @@ const products: Product[] = [
     status: "live",
     tint: "from-amber-400 to-orange-500",
     desc: "Signals and trading tools for memecoins",
+    url: "https://printing-money-launchpad-screener.vercel.app/",
   },
   {
     name: "Sniper Agent",
